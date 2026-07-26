@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Three-Phase Voltage &amp; Current Waveform</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Three-Phase Voltage &amp; Current Waveform</h1>
+      <p class="subtitle">Balanced 3&Phi; system &mdash; phases 120&deg; apart, current lagging/leading voltage by the load angle &phi;</p>
+    </header>
+
+    <main>
+      <canvas id="waveformCanvas"></canvas>
+
+      <section class="controls">
+        <div class="control">
+          <label for="frequency">Frequency (Hz): <span id="frequencyVal">50</span></label>
+          <input type="range" id="frequency" min="1" max="100" step="1" value="50">
+        </div>
+
+        <div class="control">
+          <label for="voltageAmp">Voltage Amplitude (V): <span id="voltageAmpVal">230</span></label>
+          <input type="range" id="voltageAmp" min="10" max="400" step="1" value="230">
+        </div>
+
+        <div class="control">
+          <label for="currentAmp">Current Amplitude (A): <span id="currentAmpVal">10</span></label>
+          <input type="range" id="currentAmp" min="1" max="50" step="1" value="10">
+        </div>
+
+        <div class="control">
+          <label for="phaseAngle">Load Angle &phi; (deg, current lag): <span id="phaseAngleVal">30</span></label>
+          <input type="range" id="phaseAngle" min="-90" max="90" step="1" value="30">
+        </div>
+
+        <div class="control">
+          <label for="speed">Animation Speed: <span id="speedVal">1.0</span>x</label>
+          <input type="range" id="speed" min="0" max="3" step="0.1" value="1.0">
+        </div>
+
+        <div class="control buttons">
+          <button id="toggleBtn">Pause</button>
+          <button id="resetBtn">Reset</button>
+          <label class="checkbox">
+            <input type="checkbox" id="showCurrent" checked> Show Current
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" id="showVoltage" checked> Show Voltage
+          </label>
+        </div>
+      </section>
+
+      <section class="legend">
+        <span class="legend-item"><i class="swatch" style="background:#ff5252"></i>Phase A (R)</span>
+        <span class="legend-item"><i class="swatch" style="background:#4caf50"></i>Phase B (Y)</span>
+        <span class="legend-item"><i class="swatch" style="background:#2196f3"></i>Phase C (B)</span>
+        <span class="legend-item"><i class="swatch dashed"></i>Current (dashed)</span>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/waveform.js"></script>
+</body>
+</html>
