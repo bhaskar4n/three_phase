@@ -14,7 +14,19 @@
     </header>
 
     <main>
-      <canvas id="waveformCanvas"></canvas>
+      <div class="plots">
+        <div class="plot-panel">
+          <h2>Time-Domain Waveform</h2>
+          <canvas id="waveformCanvas"></canvas>
+        </div>
+        <div class="plot-panel phasor-panel">
+          <h2>Phasor Diagram</h2>
+          <div class="phasor-canvas-wrap">
+            <canvas id="phasorCanvas"></canvas>
+          </div>
+          <p class="phasor-note">Arrows show instantaneous direction &mdash; voltage phasors (solid) and current phasors (dashed) rotate counter-clockwise at &omega; = 2&pi;f.</p>
+        </div>
+      </div>
 
       <section class="controls">
         <div class="control">
@@ -59,6 +71,7 @@
         <span class="legend-item"><i class="swatch" style="background:#4caf50"></i>Phase B (Y)</span>
         <span class="legend-item"><i class="swatch" style="background:#2196f3"></i>Phase C (B)</span>
         <span class="legend-item"><i class="swatch dashed"></i>Current (dashed)</span>
+        <span class="legend-item">&#8594; Arrowhead = instantaneous current/voltage direction</span>
       </section>
     </main>
   </div>

@@ -2,6 +2,9 @@
   const canvas = document.getElementById('waveformCanvas');
   const ctx = canvas.getContext('2d');
 
+  const phasorCanvas = document.getElementById('phasorCanvas');
+  const phasorCtx = phasorCanvas.getContext('2d');
+
   const els = {
     frequency: document.getElementById('frequency'),
     voltageAmp: document.getElementById('voltageAmp'),
@@ -77,15 +80,19 @@
     state.showVoltage = els.showVoltage.checked;
   });
 
-  function resizeCanvas() {
+  function resizeCanvas(el, context) {
     const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const rect = el.getBoundingClientRect();
+    el.width = rect.width * dpr;
+    el.height = rect.height * dpr;
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
+  function resizeCanvases() {
+    resizeCanvas(canvas, ctx);
+    resizeCanvas(phasorCanvas, phasorCtx);
+  }
+  window.addEventListener('resize', resizeCanvases);
+  resizeCanvases();
 
   const deg2rad = (d) => (d * Math.PI) / 180;
 
@@ -150,6 +157,81 @@
     ctx.setLineDash([]);
   }
 
+  function drawArrow(context, x0, y0, x1, y1, color, dashed) {
+    const headLen = 10;
+    const angle = Math.atan2(y1 - y0, x1 - x0);
+
+    context.strokeStyle = color;
+    context.fillStyle = color;
+    context.lineWidth = 2;
+    context.setLineDash(dashed ? [5, 4] : []);
+
+    context.beginPath();
+    context.moveTo(x0, y0);
+    context.lineTo(x1, y1);
+    context.stroke();
+    context.setLineDash([]);
+
+    context.beginPath();
+    context.moveTo(x1, y1);
+    context.lineTo(x1 - headLen * Math.cos(angle - Math.PI / 6), y1 - headLen * Math.sin(angle - Math.PI / 6));
+    context.lineTo(x1 - headLen * Math.cos(angle + Math.PI / 6), y1 - headLen * Math.sin(angle + Math.PI / 6));
+    context.closePath();
+    context.fill();
+  }
+
+  function drawPhasorDiagram(thetaOffsetRad) {
+    const rect = phasorCanvas.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const cx = width / 2;
+    const cy = height / 2;
+    const maxR = Math.min(width, height) / 2 - 26;
+    const voltageR = maxR * 0.85;
+    const currentR = maxR * 0.5;
+
+    phasorCtx.clearRect(0, 0, width, height);
+
+    // Reference circles for the voltage and current phasor magnitudes.
+    phasorCtx.strokeStyle = '#2a2e3a';
+    phasorCtx.lineWidth = 1;
+    [voltageR, currentR].forEach((r) => {
+      phasorCtx.beginPath();
+      phasorCtx.arc(cx, cy, r, 0, Math.PI * 2);
+      phasorCtx.stroke();
+    });
+
+    // Axes
+    phasorCtx.beginPath();
+    phasorCtx.moveTo(cx - maxR, cy);
+    phasorCtx.lineTo(cx + maxR, cy);
+    phasorCtx.moveTo(cx, cy - maxR);
+    phasorCtx.lineTo(cx, cy + maxR);
+    phasorCtx.stroke();
+
+    phasorCtx.font = '11px sans-serif';
+    phasorCtx.fillStyle = '#9aa0ac';
+
+    if (state.showVoltage) {
+      PHASES.forEach((p) => {
+        const angle = thetaOffsetRad + deg2rad(p.offsetDeg);
+        const x = cx + voltageR * Math.cos(angle);
+        const y = cy - voltageR * Math.sin(angle);
+        drawArrow(phasorCtx, cx, cy, x, y, p.color, false);
+        phasorCtx.fillText(p.name, x + 6 * Math.cos(angle), y - 6 * Math.sin(angle));
+      });
+    }
+
+    if (state.showCurrent) {
+      PHASES.forEach((p) => {
+        const angle = thetaOffsetRad + deg2rad(p.offsetDeg - state.phaseAngleDeg);
+        const x = cx + currentR * Math.cos(angle);
+        const y = cy - currentR * Math.sin(angle);
+        drawArrow(phasorCtx, cx, cy, x, y, p.color, true);
+      });
+    }
+  }
+
   let lastTs = null;
 
   function render(ts) {
@@ -196,6 +278,8 @@
         );
       });
     }
+
+    drawPhasorDiagram(thetaOffset);
 
     requestAnimationFrame(render);
   }
