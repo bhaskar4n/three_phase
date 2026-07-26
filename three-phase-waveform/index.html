@@ -18,6 +18,37 @@
         <div class="plot-panel wave-panel">
           <h2>Time-Domain Waveform</h2>
           <canvas id="waveformCanvas"></canvas>
+
+          <div class="control marker-control">
+            <label for="marker">Marker Position (deg): <span id="markerVal">0</span>&deg;</label>
+            <input type="range" id="marker" min="0" max="720" step="1" value="0">
+          </div>
+
+          <div class="marker-readout">
+            <div class="marker-readout-header">Instantaneous values at marker &mdash; electrical angle <span id="markerAngleVal">0</span>&deg;</div>
+            <table class="readout-table">
+              <thead>
+                <tr><th></th><th>Voltage</th><th>Current</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><i class="dot" style="background:#ff5252"></i>A</td>
+                  <td id="markerVa">0.0 V</td>
+                  <td id="markerIa">0.0 A</td>
+                </tr>
+                <tr>
+                  <td><i class="dot" style="background:#4caf50"></i>B</td>
+                  <td id="markerVb">0.0 V</td>
+                  <td id="markerIb">0.0 A</td>
+                </tr>
+                <tr>
+                  <td><i class="dot" style="background:#2196f3"></i>C</td>
+                  <td id="markerVc">0.0 V</td>
+                  <td id="markerIc">0.0 A</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
         <div class="plot-panel phasor-panel">
           <h2>Phasor Diagram</h2>

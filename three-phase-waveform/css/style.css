@@ -92,6 +92,57 @@ canvas {
   height: 420px;
 }
 
+.marker-control {
+  margin-top: 14px;
+}
+
+.marker-readout {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.marker-readout-header {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.readout-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.readout-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 0.78rem;
+  padding: 2px 8px;
+}
+
+.readout-table td {
+  padding: 4px 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.readout-table td:first-child {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
 .phasor-canvas-wrap {
   width: 100%;
   max-width: 380px;

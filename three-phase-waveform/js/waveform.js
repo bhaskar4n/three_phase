@@ -14,6 +14,7 @@
     currentAmp: document.getElementById('currentAmp'),
     phaseAngle: document.getElementById('phaseAngle'),
     speed: document.getElementById('speed'),
+    marker: document.getElementById('marker'),
     toggleBtn: document.getElementById('toggleBtn'),
     resetBtn: document.getElementById('resetBtn'),
     showCurrent: document.getElementById('showCurrent'),
@@ -26,6 +27,17 @@
     currentAmp: document.getElementById('currentAmpVal'),
     phaseAngle: document.getElementById('phaseAngleVal'),
     speed: document.getElementById('speedVal'),
+    marker: document.getElementById('markerVal'),
+  };
+
+  const readout = {
+    angle: document.getElementById('markerAngleVal'),
+    Va: document.getElementById('markerVa'),
+    Ia: document.getElementById('markerIa'),
+    Vb: document.getElementById('markerVb'),
+    Ib: document.getElementById('markerIb'),
+    Vc: document.getElementById('markerVc'),
+    Ic: document.getElementById('markerIc'),
   };
 
   const PHASES = [
@@ -34,12 +46,19 @@
     { name: 'C', offsetDeg: -240, color: '#2196f3', schematicDeg: 330 },
   ];
 
+  const phaseReadoutEls = [
+    { v: readout.Va, i: readout.Ia },
+    { v: readout.Vb, i: readout.Ib },
+    { v: readout.Vc, i: readout.Ic },
+  ];
+
   const state = {
     frequency: Number(els.frequency.value),
     voltageAmp: Number(els.voltageAmp.value),
     currentAmp: Number(els.currentAmp.value),
     phaseAngleDeg: Number(els.phaseAngle.value),
     speed: Number(els.speed.value),
+    markerDeg: Number(els.marker.value),
     running: true,
     showCurrent: els.showCurrent.checked,
     showVoltage: els.showVoltage.checked,
@@ -65,6 +84,10 @@
   els.speed.addEventListener('input', () => {
     state.speed = Number(els.speed.value);
     valueLabels.speed.textContent = state.speed.toFixed(1);
+  });
+  els.marker.addEventListener('input', () => {
+    state.markerDeg = Number(els.marker.value);
+    valueLabels.marker.textContent = state.markerDeg;
   });
 
   els.toggleBtn.addEventListener('click', () => {
@@ -159,6 +182,60 @@
     }
     ctx.stroke();
     ctx.setLineDash([]);
+  }
+
+  function drawMarker(width, height, padding, maxV, maxI, thetaOffsetRad) {
+    const plotW = width - padding.left - padding.right;
+    const plotH = height - padding.top - padding.bottom;
+    const midY = padding.top + plotH / 2;
+    const totalDeg = 720;
+    const markerRad = deg2rad(state.markerDeg);
+    const mx = padding.left + (state.markerDeg / totalDeg) * plotW;
+
+    ctx.strokeStyle = '#e6e8ee';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(mx, padding.top);
+    ctx.lineTo(mx, padding.top + plotH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const totalAngleDeg = ((thetaOffsetRad + markerRad) * 180) / Math.PI;
+    const normalizedAngle = ((totalAngleDeg % 360) + 360) % 360;
+    readout.angle.textContent = normalizedAngle.toFixed(1);
+
+    PHASES.forEach((p, idx) => {
+      const els = phaseReadoutEls[idx];
+
+      const vAngle = thetaOffsetRad + markerRad + deg2rad(p.offsetDeg);
+      const v = state.voltageAmp * Math.sin(vAngle);
+      els.v.textContent = `${v.toFixed(1)} V`;
+      if (state.showVoltage) {
+        const py = midY - (v / maxV) * (plotH / 2 - 10);
+        ctx.beginPath();
+        ctx.arc(mx, py, 4, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        ctx.strokeStyle = '#0f1117';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      const iAngle = thetaOffsetRad + markerRad + deg2rad(p.offsetDeg - state.phaseAngleDeg);
+      const i = state.currentAmp * Math.sin(iAngle);
+      els.i.textContent = `${i.toFixed(1)} A`;
+      if (state.showCurrent) {
+        const py = midY - (i / maxI) * (plotH / 2 - 10);
+        ctx.beginPath();
+        ctx.arc(mx, py, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#171a23';
+        ctx.fill();
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    });
   }
 
   function drawArrow(context, x0, y0, x1, y1, color, dashed) {
@@ -372,8 +449,11 @@
       });
     }
 
-    drawPhasorDiagram(thetaOffset);
-    drawStarWinding(thetaOffset);
+    drawMarker(width, height, padding, maxV, maxI, thetaOffset);
+
+    const markerAngle = thetaOffset + deg2rad(state.markerDeg);
+    drawPhasorDiagram(markerAngle);
+    drawStarWinding(markerAngle);
 
     requestAnimationFrame(render);
   }
