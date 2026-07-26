@@ -45,14 +45,33 @@ canvas {
 
 .plots {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "wave wave"
+    "phasor star";
   gap: 16px;
   align-items: start;
+}
+
+.wave-panel {
+  grid-area: wave;
+}
+
+.phasor-panel {
+  grid-area: phasor;
+}
+
+.star-panel {
+  grid-area: star;
 }
 
 @media (max-width: 800px) {
   .plots {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "wave"
+      "phasor"
+      "star";
   }
 }
 
@@ -86,6 +105,25 @@ canvas {
 }
 
 .phasor-note {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.star-canvas-wrap {
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+}
+
+#starCanvas {
+  width: 100%;
+  height: 100%;
+}
+
+.star-note {
   margin: 10px 0 0;
   font-size: 0.78rem;
   color: var(--muted);

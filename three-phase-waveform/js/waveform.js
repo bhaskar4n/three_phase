@@ -5,6 +5,9 @@
   const phasorCanvas = document.getElementById('phasorCanvas');
   const phasorCtx = phasorCanvas.getContext('2d');
 
+  const starCanvas = document.getElementById('starCanvas');
+  const starCtx = starCanvas.getContext('2d');
+
   const els = {
     frequency: document.getElementById('frequency'),
     voltageAmp: document.getElementById('voltageAmp'),
@@ -26,9 +29,9 @@
   };
 
   const PHASES = [
-    { name: 'A', offsetDeg: 0, color: '#ff5252' },
-    { name: 'B', offsetDeg: -120, color: '#4caf50' },
-    { name: 'C', offsetDeg: -240, color: '#2196f3' },
+    { name: 'A', offsetDeg: 0, color: '#ff5252', schematicDeg: 90 },
+    { name: 'B', offsetDeg: -120, color: '#4caf50', schematicDeg: 210 },
+    { name: 'C', offsetDeg: -240, color: '#2196f3', schematicDeg: 330 },
   ];
 
   const state = {
@@ -90,6 +93,7 @@
   function resizeCanvases() {
     resizeCanvas(canvas, ctx);
     resizeCanvas(phasorCanvas, phasorCtx);
+    resizeCanvas(starCanvas, starCtx);
   }
   window.addEventListener('resize', resizeCanvases);
   resizeCanvases();
@@ -232,6 +236,95 @@
     }
   }
 
+  function instantaneousCurrent(p, thetaOffsetRad) {
+    const angle = thetaOffsetRad + deg2rad(p.offsetDeg - state.phaseAngleDeg);
+    return state.currentAmp * Math.sin(angle);
+  }
+
+  function drawStarWinding(thetaOffsetRad) {
+    const rect = starCanvas.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const cx = width / 2;
+    const cy = height / 2;
+    const maxR = Math.min(width, height) / 2 - 34;
+    const coilFraction = 0.55;
+    const coilW = 30;
+    const coilH = 14;
+
+    starCtx.clearRect(0, 0, width, height);
+
+    PHASES.forEach((p) => {
+      const angleRad = deg2rad(p.schematicDeg);
+      const tx = cx + maxR * Math.cos(angleRad);
+      const ty = cy - maxR * Math.sin(angleRad);
+      const current = instantaneousCurrent(p, thetaOffsetRad);
+      const isOut = current >= 0;
+
+      if (state.showCurrent) {
+        if (isOut) {
+          drawArrow(starCtx, cx, cy, tx, ty, p.color, false);
+        } else {
+          drawArrow(starCtx, tx, ty, cx, cy, p.color, false);
+        }
+      } else {
+        starCtx.strokeStyle = p.color;
+        starCtx.lineWidth = 2;
+        starCtx.beginPath();
+        starCtx.moveTo(cx, cy);
+        starCtx.lineTo(tx, ty);
+        starCtx.stroke();
+      }
+
+      // Winding symbol: a small box straddling the line, breaking it up
+      // visually like a coil.
+      const coilCx = cx + coilFraction * (tx - cx);
+      const coilCy = cy + coilFraction * (ty - cy);
+      const lineAngleCanvas = Math.atan2(ty - cy, tx - cx);
+      starCtx.save();
+      starCtx.translate(coilCx, coilCy);
+      starCtx.rotate(lineAngleCanvas);
+      starCtx.fillStyle = '#171a23';
+      starCtx.fillRect(-coilW / 2, -coilH / 2, coilW, coilH);
+      starCtx.strokeStyle = p.color;
+      starCtx.lineWidth = 2;
+      starCtx.strokeRect(-coilW / 2, -coilH / 2, coilW, coilH);
+      starCtx.beginPath();
+      for (let k = -1; k <= 1; k++) {
+        starCtx.moveTo((k * coilW) / 4, -coilH / 2);
+        starCtx.lineTo((k * coilW) / 4 + 4, coilH / 2);
+      }
+      starCtx.stroke();
+      starCtx.restore();
+
+      // Phase + terminal label
+      starCtx.font = 'bold 12px sans-serif';
+      starCtx.fillStyle = p.color;
+      const labelX = cx + (maxR + 14) * Math.cos(angleRad);
+      const labelY = cy - (maxR + 14) * Math.sin(angleRad);
+      starCtx.textAlign = 'center';
+      starCtx.fillText(p.name, labelX, labelY);
+
+      // Direction + magnitude readout
+      if (state.showCurrent) {
+        starCtx.font = '11px sans-serif';
+        starCtx.fillStyle = '#9aa0ac';
+        const readoutY = labelY + (Math.sin(angleRad) < 0 ? 16 : -6);
+        starCtx.fillText(`${Math.abs(current).toFixed(1)} A ${isOut ? 'OUT' : 'IN'}`, labelX, readoutY);
+      }
+      starCtx.textAlign = 'left';
+    });
+
+    // Neutral point
+    starCtx.beginPath();
+    starCtx.arc(cx, cy, 5, 0, Math.PI * 2);
+    starCtx.fillStyle = '#e6e8ee';
+    starCtx.fill();
+    starCtx.font = '11px sans-serif';
+    starCtx.fillStyle = '#9aa0ac';
+    starCtx.fillText('N', cx + 8, cy - 8);
+  }
+
   let lastTs = null;
 
   function render(ts) {
@@ -280,6 +373,7 @@
     }
 
     drawPhasorDiagram(thetaOffset);
+    drawStarWinding(thetaOffset);
 
     requestAnimationFrame(render);
   }

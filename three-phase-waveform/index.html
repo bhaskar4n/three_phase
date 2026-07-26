@@ -15,7 +15,7 @@
 
     <main>
       <div class="plots">
-        <div class="plot-panel">
+        <div class="plot-panel wave-panel">
           <h2>Time-Domain Waveform</h2>
           <canvas id="waveformCanvas"></canvas>
         </div>
@@ -25,6 +25,13 @@
             <canvas id="phasorCanvas"></canvas>
           </div>
           <p class="phasor-note">Arrows show instantaneous direction &mdash; voltage phasors (solid) and current phasors (dashed) rotate counter-clockwise at &omega; = 2&pi;f.</p>
+        </div>
+        <div class="plot-panel star-panel">
+          <h2>Star (Y) Winding Diagram</h2>
+          <div class="star-canvas-wrap">
+            <canvas id="starCanvas"></canvas>
+          </div>
+          <p class="star-note">Each winding's arrow follows its instantaneous current from the waveform above &mdash; pointing <strong>OUT</strong> (N &rarr; line) while that phase current is positive, and <strong>IN</strong> (line &rarr; N) while it's negative.</p>
         </div>
       </div>
 
