@@ -122,6 +122,8 @@
   resizeCanvases();
 
   const deg2rad = (d) => (d * Math.PI) / 180;
+  const rad2deg = (r) => (r * 180) / Math.PI;
+  const normalizeDeg = (deg) => ((deg % 360) + 360) % 360;
 
   function drawGrid(width, height, padding) {
     const plotW = width - padding.left - padding.right;
@@ -201,8 +203,7 @@
     ctx.stroke();
     ctx.setLineDash([]);
 
-    const totalAngleDeg = ((thetaOffsetRad + markerRad) * 180) / Math.PI;
-    const normalizedAngle = ((totalAngleDeg % 360) + 360) % 360;
+    const normalizedAngle = normalizeDeg(rad2deg(thetaOffsetRad + markerRad));
     readout.angle.textContent = normalizedAngle.toFixed(1);
 
     PHASES.forEach((p, idx) => {
@@ -210,7 +211,7 @@
 
       const vAngle = thetaOffsetRad + markerRad + deg2rad(p.offsetDeg);
       const v = state.voltageAmp * Math.sin(vAngle);
-      els.v.textContent = `${v.toFixed(1)} V`;
+      els.v.textContent = `${v.toFixed(1)} V ∠${normalizeDeg(rad2deg(vAngle)).toFixed(1)}°`;
       if (state.showVoltage) {
         const py = midY - (v / maxV) * (plotH / 2 - 10);
         ctx.beginPath();
@@ -224,7 +225,7 @@
 
       const iAngle = thetaOffsetRad + markerRad + deg2rad(p.offsetDeg - state.phaseAngleDeg);
       const i = state.currentAmp * Math.sin(iAngle);
-      els.i.textContent = `${i.toFixed(1)} A`;
+      els.i.textContent = `${i.toFixed(1)} A ∠${normalizeDeg(rad2deg(iAngle)).toFixed(1)}°`;
       if (state.showCurrent) {
         const py = midY - (i / maxI) * (plotH / 2 - 10);
         ctx.beginPath();
@@ -299,7 +300,16 @@
         const x = cx + voltageR * Math.cos(angle);
         const y = cy - voltageR * Math.sin(angle);
         drawArrow(phasorCtx, cx, cy, x, y, p.color, false);
+        phasorCtx.font = 'bold 11px sans-serif';
+        phasorCtx.fillStyle = p.color;
         phasorCtx.fillText(p.name, x + 6 * Math.cos(angle), y - 6 * Math.sin(angle));
+        phasorCtx.font = '10px sans-serif';
+        phasorCtx.fillStyle = '#9aa0ac';
+        phasorCtx.fillText(
+          `${normalizeDeg(rad2deg(angle)).toFixed(0)}°`,
+          x + 6 * Math.cos(angle),
+          y - 6 * Math.sin(angle) + 12
+        );
       });
     }
 
@@ -309,6 +319,13 @@
         const x = cx + currentR * Math.cos(angle);
         const y = cy - currentR * Math.sin(angle);
         drawArrow(phasorCtx, cx, cy, x, y, p.color, true);
+        phasorCtx.font = '10px sans-serif';
+        phasorCtx.fillStyle = p.color;
+        phasorCtx.fillText(
+          `${normalizeDeg(rad2deg(angle)).toFixed(0)}°`,
+          x + 6 * Math.cos(angle),
+          y - 6 * Math.sin(angle)
+        );
       });
     }
   }
@@ -318,13 +335,18 @@
     return state.currentAmp * Math.sin(angle);
   }
 
+  function instantaneousVoltage(p, thetaOffsetRad) {
+    const angle = thetaOffsetRad + deg2rad(p.offsetDeg);
+    return state.voltageAmp * Math.sin(angle);
+  }
+
   function drawStarWinding(thetaOffsetRad) {
     const rect = starCanvas.getBoundingClientRect();
     const width = rect.width;
     const height = rect.height;
     const cx = width / 2;
     const cy = height / 2;
-    const maxR = Math.min(width, height) / 2 - 34;
+    const maxR = Math.min(width, height) / 2 - 48;
     const coilFraction = 0.55;
     const coilW = 30;
     const coilH = 14;
@@ -336,7 +358,9 @@
       const tx = cx + maxR * Math.cos(angleRad);
       const ty = cy - maxR * Math.sin(angleRad);
       const current = instantaneousCurrent(p, thetaOffsetRad);
+      const voltage = instantaneousVoltage(p, thetaOffsetRad);
       const isOut = current >= 0;
+      const isPositive = voltage >= 0;
 
       if (state.showCurrent) {
         if (isOut) {
@@ -374,20 +398,31 @@
       starCtx.stroke();
       starCtx.restore();
 
-      // Phase + terminal label
+      // Phase + terminal label, stacked outward (away from N) so the
+      // voltage/current readout lines don't collide with the winding lines.
+      const stackDir = Math.sin(angleRad) < 0 ? 1 : -1;
+      const lineStep = 13;
       starCtx.font = 'bold 12px sans-serif';
       starCtx.fillStyle = p.color;
-      const labelX = cx + (maxR + 14) * Math.cos(angleRad);
-      const labelY = cy - (maxR + 14) * Math.sin(angleRad);
+      const labelX = cx + (maxR + 12) * Math.cos(angleRad);
+      const labelY = cy - (maxR + 12) * Math.sin(angleRad);
       starCtx.textAlign = 'center';
       starCtx.fillText(p.name, labelX, labelY);
 
-      // Direction + magnitude readout
-      if (state.showCurrent) {
+      let lineY = labelY + stackDir * lineStep;
+
+      // Instantaneous voltage with polarity relative to neutral.
+      if (state.showVoltage) {
         starCtx.font = '11px sans-serif';
+        starCtx.fillStyle = '#e6e8ee';
+        starCtx.fillText(`${Math.abs(voltage).toFixed(1)} V (${isPositive ? '+' : '-'})`, labelX, lineY);
+        lineY += stackDir * lineStep;
+      }
+
+      // Current direction + magnitude readout
+      if (state.showCurrent) {
         starCtx.fillStyle = '#9aa0ac';
-        const readoutY = labelY + (Math.sin(angleRad) < 0 ? 16 : -6);
-        starCtx.fillText(`${Math.abs(current).toFixed(1)} A ${isOut ? 'OUT' : 'IN'}`, labelX, readoutY);
+        starCtx.fillText(`${Math.abs(current).toFixed(1)} A ${isOut ? 'OUT' : 'IN'}`, labelX, lineY);
       }
       starCtx.textAlign = 'left';
     });
