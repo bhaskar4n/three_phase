@@ -32,17 +32,17 @@
               </thead>
               <tbody>
                 <tr>
-                  <td><i class="dot" style="background:#ff5252"></i>A</td>
+                  <td><i class="dot" style="background:#ff5252"></i>R</td>
                   <td id="markerVa">0.0 V</td>
                   <td id="markerIa">0.0 A</td>
                 </tr>
                 <tr>
-                  <td><i class="dot" style="background:#4caf50"></i>B</td>
+                  <td><i class="dot" style="background:#ffd600"></i>Y</td>
                   <td id="markerVb">0.0 V</td>
                   <td id="markerIb">0.0 A</td>
                 </tr>
                 <tr>
-                  <td><i class="dot" style="background:#2196f3"></i>C</td>
+                  <td><i class="dot" style="background:#2196f3"></i>B</td>
                   <td id="markerVc">0.0 V</td>
                   <td id="markerIc">0.0 A</td>
                 </tr>
@@ -62,7 +62,7 @@
           <div class="star-canvas-wrap">
             <canvas id="starCanvas"></canvas>
           </div>
-          <p class="star-note">Each winding shows its instantaneous line-to-neutral voltage with polarity (<strong>+</strong>/<strong>-</strong> relative to N) and its current arrow &mdash; pointing <strong>OUT</strong> (N &rarr; line) while that phase current is positive, and <strong>IN</strong> (line &rarr; N) while it's negative.</p>
+          <p class="star-note">Each winding shows its instantaneous line-to-neutral voltage with polarity (<strong>+</strong>/<strong>-</strong> relative to N) and its current arrow &mdash; pointing <strong>OUT</strong> (N &rarr; line) while that phase current is positive, and <strong>IN</strong> (line &rarr; N) while it's negative. The dashed outer triangle shows the instantaneous line-to-line voltages <strong>RY</strong>, <strong>YB</strong>, and <strong>BR</strong>.</p>
         </div>
       </div>
 
@@ -105,9 +105,9 @@
       </section>
 
       <section class="legend">
-        <span class="legend-item"><i class="swatch" style="background:#ff5252"></i>Phase A (R)</span>
-        <span class="legend-item"><i class="swatch" style="background:#4caf50"></i>Phase B (Y)</span>
-        <span class="legend-item"><i class="swatch" style="background:#2196f3"></i>Phase C (B)</span>
+        <span class="legend-item"><i class="swatch" style="background:#ff5252"></i>Phase R (Red)</span>
+        <span class="legend-item"><i class="swatch" style="background:#ffd600"></i>Phase Y (Yellow)</span>
+        <span class="legend-item"><i class="swatch" style="background:#2196f3"></i>Phase B (Blue)</span>
         <span class="legend-item"><i class="swatch dashed"></i>Current (dashed)</span>
         <span class="legend-item">&#8594; Arrowhead = instantaneous current/voltage direction</span>
       </section>

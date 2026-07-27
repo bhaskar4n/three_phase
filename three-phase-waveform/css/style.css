@@ -145,7 +145,7 @@ canvas {
 
 .phasor-canvas-wrap {
   width: 100%;
-  max-width: 380px;
+  max-width: 440px;
   aspect-ratio: 1 / 1;
   margin: 0 auto;
 }
@@ -164,7 +164,7 @@ canvas {
 
 .star-canvas-wrap {
   width: 100%;
-  max-width: 380px;
+  max-width: 440px;
   aspect-ratio: 1 / 1;
   margin: 0 auto;
 }

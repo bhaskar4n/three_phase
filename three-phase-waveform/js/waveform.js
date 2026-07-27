@@ -41,9 +41,9 @@
   };
 
   const PHASES = [
-    { name: 'A', offsetDeg: 0, color: '#ff5252', schematicDeg: 90 },
-    { name: 'B', offsetDeg: -120, color: '#4caf50', schematicDeg: 210 },
-    { name: 'C', offsetDeg: -240, color: '#2196f3', schematicDeg: 330 },
+    { name: 'R', offsetDeg: 0, color: '#ff5252', schematicDeg: 90 },
+    { name: 'Y', offsetDeg: -120, color: '#ffd600', schematicDeg: 210 },
+    { name: 'B', offsetDeg: -240, color: '#2196f3', schematicDeg: 330 },
   ];
 
   const phaseReadoutEls = [
@@ -353,10 +353,18 @@
 
     starCtx.clearRect(0, 0, width, height);
 
-    PHASES.forEach((p) => {
+    const terminals = PHASES.map((p) => {
       const angleRad = deg2rad(p.schematicDeg);
-      const tx = cx + maxR * Math.cos(angleRad);
-      const ty = cy - maxR * Math.sin(angleRad);
+      return {
+        x: cx + maxR * Math.cos(angleRad),
+        y: cy - maxR * Math.sin(angleRad),
+      };
+    });
+
+    PHASES.forEach((p, idx) => {
+      const angleRad = deg2rad(p.schematicDeg);
+      const tx = terminals[idx].x;
+      const ty = terminals[idx].y;
       const current = instantaneousCurrent(p, thetaOffsetRad);
       const voltage = instantaneousVoltage(p, thetaOffsetRad);
       const isOut = current >= 0;
@@ -426,6 +434,50 @@
       }
       starCtx.textAlign = 'left';
     });
+
+    // Line-to-line voltages (RY, YB, BR) across each pair of terminals.
+    if (state.showVoltage) {
+      const linePairs = [
+        [0, 1],
+        [1, 2],
+        [2, 0],
+      ];
+
+      starCtx.font = '11px sans-serif';
+      starCtx.textAlign = 'center';
+
+      linePairs.forEach(([fromIdx, toIdx]) => {
+        const from = terminals[fromIdx];
+        const to = terminals[toIdx];
+        const vLine =
+          instantaneousVoltage(PHASES[fromIdx], thetaOffsetRad) - instantaneousVoltage(PHASES[toIdx], thetaOffsetRad);
+        const label = `${PHASES[fromIdx].name}${PHASES[toIdx].name}`;
+
+        starCtx.strokeStyle = '#4a4f5e';
+        starCtx.lineWidth = 1;
+        starCtx.setLineDash([3, 3]);
+        starCtx.beginPath();
+        starCtx.moveTo(from.x, from.y);
+        starCtx.lineTo(to.x, to.y);
+        starCtx.stroke();
+        starCtx.setLineDash([]);
+
+        const midX = (from.x + to.x) / 2;
+        const midY = (from.y + to.y) / 2;
+        // Push the label outward, away from the neutral point, so it sits
+        // clear of the triangle edge and the coil symbols.
+        const outX = midX - cx;
+        const outY = midY - cy;
+        const outLen = Math.hypot(outX, outY) || 1;
+        const labelX = midX + (outX / outLen) * 14;
+        const labelY = midY + (outY / outLen) * 14;
+
+        starCtx.fillStyle = '#c7cbd4';
+        starCtx.fillText(`${label}: ${vLine.toFixed(1)} V`, labelX, labelY);
+      });
+
+      starCtx.textAlign = 'left';
+    }
 
     // Neutral point
     starCtx.beginPath();
