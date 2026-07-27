@@ -52,13 +52,19 @@
     { v: readout.Vc, i: readout.Ic },
   ];
 
+  // Fixed oscilloscope-style time window: the x-axis always spans this many
+  // milliseconds, so higher frequencies pack in more visible cycles and
+  // lower frequencies show fewer (at the default 50 Hz this is exactly 2
+  // cycles, matching the previous fixed-cycle view).
+  const WINDOW_MS = 40;
+
   const state = {
     frequency: Number(els.frequency.value),
     voltageAmp: Number(els.voltageAmp.value),
     currentAmp: Number(els.currentAmp.value),
     phaseAngleDeg: Number(els.phaseAngle.value),
     speed: Number(els.speed.value),
-    markerDeg: Number(els.marker.value),
+    markerMs: Number(els.marker.value),
     running: true,
     showCurrent: els.showCurrent.checked,
     showVoltage: els.showVoltage.checked,
@@ -86,8 +92,8 @@
     valueLabels.speed.textContent = state.speed.toFixed(1);
   });
   els.marker.addEventListener('input', () => {
-    state.markerDeg = Number(els.marker.value);
-    valueLabels.marker.textContent = state.markerDeg;
+    state.markerMs = Number(els.marker.value);
+    valueLabels.marker.textContent = state.markerMs.toFixed(1);
   });
 
   els.toggleBtn.addEventListener('click', () => {
@@ -134,16 +140,16 @@
     ctx.font = '11px sans-serif';
     ctx.fillStyle = '#9aa0ac';
 
-    // Vertical gridlines every 90 degrees across 2 cycles (0..720)
-    const totalDeg = 720;
-    for (let d = 0; d <= totalDeg; d += 90) {
-      const x = padding.left + (d / totalDeg) * plotW;
+    // Vertical gridlines every 5ms across the fixed time window, labeled
+    // every 10ms.
+    for (let t = 0; t <= WINDOW_MS; t += 5) {
+      const x = padding.left + (t / WINDOW_MS) * plotW;
       ctx.beginPath();
       ctx.moveTo(x, padding.top);
       ctx.lineTo(x, padding.top + plotH);
       ctx.stroke();
-      if (d % 360 === 0) {
-        ctx.fillText(`${d}°`, x + 2, padding.top + plotH + 14);
+      if (t % 10 === 0) {
+        ctx.fillText(`${t} ms`, x + 2, padding.top + plotH + 14);
       }
     }
 
@@ -165,7 +171,6 @@
     const plotW = width - padding.left - padding.right;
     const plotH = height - padding.top - padding.bottom;
     const midY = padding.top + plotH / 2;
-    const totalDeg = 720;
     const samples = 720;
 
     ctx.beginPath();
@@ -174,10 +179,12 @@
     ctx.setLineDash(dashed ? [6, 4] : []);
 
     for (let i = 0; i <= samples; i++) {
-      const deg = (i / samples) * totalDeg;
-      const theta = deg2rad(deg) + thetaOffsetRad + deg2rad(phaseOffsetDeg);
+      const tMs = (i / samples) * WINDOW_MS;
+      // The phase swept per millisecond scales with frequency, so higher
+      // frequencies pack more cycles into the fixed time window.
+      const theta = 2 * Math.PI * state.frequency * (tMs / 1000) + thetaOffsetRad + deg2rad(phaseOffsetDeg);
       const y = amp * Math.sin(theta);
-      const px = padding.left + (deg / totalDeg) * plotW;
+      const px = padding.left + (tMs / WINDOW_MS) * plotW;
       const py = midY - (y / maxAmp) * (plotH / 2 - 10);
       if (i === 0) ctx.moveTo(px, py);
       else ctx.lineTo(px, py);
@@ -190,9 +197,8 @@
     const plotW = width - padding.left - padding.right;
     const plotH = height - padding.top - padding.bottom;
     const midY = padding.top + plotH / 2;
-    const totalDeg = 720;
-    const markerRad = deg2rad(state.markerDeg);
-    const mx = padding.left + (state.markerDeg / totalDeg) * plotW;
+    const markerRad = 2 * Math.PI * state.frequency * (state.markerMs / 1000);
+    const mx = padding.left + (state.markerMs / WINDOW_MS) * plotW;
 
     ctx.strokeStyle = '#e6e8ee';
     ctx.lineWidth = 1.5;
@@ -538,7 +544,8 @@
 
     drawMarker(width, height, padding, maxV, maxI, thetaOffset);
 
-    const markerAngle = thetaOffset + deg2rad(state.markerDeg);
+    const markerPhaseRad = 2 * Math.PI * state.frequency * (state.markerMs / 1000);
+    const markerAngle = thetaOffset + markerPhaseRad;
     drawPhasorDiagram(markerAngle);
     drawStarWinding(markerAngle);
 

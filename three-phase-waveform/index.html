@@ -17,11 +17,12 @@
       <div class="plots">
         <div class="plot-panel wave-panel">
           <h2>Time-Domain Waveform</h2>
+          <p class="wave-note">Fixed 40&nbsp;ms time window (oscilloscope-style) &mdash; raising the frequency packs more visible cycles into it, lowering it shows fewer.</p>
           <canvas id="waveformCanvas"></canvas>
 
           <div class="control marker-control">
-            <label for="marker">Marker Position (deg): <span id="markerVal">0</span>&deg;</label>
-            <input type="range" id="marker" min="0" max="720" step="1" value="0">
+            <label for="marker">Marker Position (ms): <span id="markerVal">0.0</span> ms</label>
+            <input type="range" id="marker" min="0" max="40" step="0.1" value="0">
           </div>
 
           <div class="marker-readout">

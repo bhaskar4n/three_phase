@@ -88,6 +88,13 @@ canvas {
   color: var(--text);
 }
 
+.wave-note {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 #waveformCanvas {
   height: 420px;
 }
