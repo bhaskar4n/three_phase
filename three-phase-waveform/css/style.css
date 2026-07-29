@@ -271,3 +271,23 @@ button:hover {
     transparent 8px
   );
 }
+
+.summary-panel {
+  margin-top: 20px;
+}
+
+.summary-panel .marker-readout-header {
+  margin-bottom: 10px;
+}
+
+.summary-table {
+  margin-bottom: 16px;
+}
+
+.summary-table:last-child {
+  margin-bottom: 0;
+}
+
+.line-voltage-table {
+  max-width: 320px;
+}

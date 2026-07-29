@@ -112,6 +112,51 @@
         <span class="legend-item"><i class="swatch dashed"></i>Current (dashed)</span>
         <span class="legend-item">&#8594; Arrowhead = instantaneous current/voltage direction</span>
       </section>
+
+      <section class="plot-panel summary-panel">
+        <h2>All Marker Values</h2>
+        <div class="marker-readout-header">Waveform + Star (Y) Winding at t = <span id="summaryMs">0.0</span> ms &mdash; electrical angle <span id="summaryAngle">0.0</span>&deg;</div>
+
+        <table class="readout-table summary-table">
+          <thead>
+            <tr><th>Phase</th><th>Voltage (line-to-neutral)</th><th>Polarity</th><th>Current</th><th>Direction</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><i class="dot" style="background:#ff5252"></i>R</td>
+              <td id="summaryVr">0.0 V ∠0.0°</td>
+              <td id="summaryPolR">+</td>
+              <td id="summaryIr">0.0 A ∠0.0°</td>
+              <td id="summaryDirR">OUT</td>
+            </tr>
+            <tr>
+              <td><i class="dot" style="background:#ffd600"></i>Y</td>
+              <td id="summaryVy">0.0 V ∠0.0°</td>
+              <td id="summaryPolY">+</td>
+              <td id="summaryIy">0.0 A ∠0.0°</td>
+              <td id="summaryDirY">OUT</td>
+            </tr>
+            <tr>
+              <td><i class="dot" style="background:#2196f3"></i>B</td>
+              <td id="summaryVb">0.0 V ∠0.0°</td>
+              <td id="summaryPolB">+</td>
+              <td id="summaryIb">0.0 A ∠0.0°</td>
+              <td id="summaryDirB">OUT</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table class="readout-table summary-table line-voltage-table">
+          <thead>
+            <tr><th>Line Voltage</th><th>Value</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>RY</td><td id="summaryRY">0.0 V</td></tr>
+            <tr><td>YB</td><td id="summaryYB">0.0 V</td></tr>
+            <tr><td>BR</td><td id="summaryBR">0.0 V</td></tr>
+          </tbody>
+        </table>
+      </section>
     </main>
   </div>
 

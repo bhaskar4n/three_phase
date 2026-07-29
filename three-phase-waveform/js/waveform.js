@@ -52,6 +52,20 @@
     { v: readout.Vc, i: readout.Ic },
   ];
 
+  const summary = {
+    ms: document.getElementById('summaryMs'),
+    angle: document.getElementById('summaryAngle'),
+    RY: document.getElementById('summaryRY'),
+    YB: document.getElementById('summaryYB'),
+    BR: document.getElementById('summaryBR'),
+  };
+
+  const summaryPhaseEls = [
+    { v: document.getElementById('summaryVr'), pol: document.getElementById('summaryPolR'), i: document.getElementById('summaryIr'), dir: document.getElementById('summaryDirR') },
+    { v: document.getElementById('summaryVy'), pol: document.getElementById('summaryPolY'), i: document.getElementById('summaryIy'), dir: document.getElementById('summaryDirY') },
+    { v: document.getElementById('summaryVb'), pol: document.getElementById('summaryPolB'), i: document.getElementById('summaryIb'), dir: document.getElementById('summaryDirB') },
+  ];
+
   // Fixed oscilloscope-style time window: the x-axis always spans this many
   // milliseconds, so higher frequencies pack in more visible cycles and
   // lower frequencies show fewer (at the default 50 Hz this is exactly 2
@@ -346,6 +360,32 @@
     return state.voltageAmp * Math.sin(angle);
   }
 
+  // Consolidated bottom summary of every waveform + star winding value at
+  // the marker instant, reusing the same instantaneousVoltage/Current
+  // helpers the waveform readout and star winding diagram use, so all three
+  // views always agree.
+  function updateSummaryPanel(markerAngleRad) {
+    summary.ms.textContent = state.markerMs.toFixed(1);
+    summary.angle.textContent = normalizeDeg(rad2deg(markerAngleRad)).toFixed(1);
+
+    const voltages = PHASES.map((p) => instantaneousVoltage(p, markerAngleRad));
+    const currents = PHASES.map((p) => instantaneousCurrent(p, markerAngleRad));
+
+    PHASES.forEach((p, idx) => {
+      const els = summaryPhaseEls[idx];
+      const vAngle = markerAngleRad + deg2rad(p.offsetDeg);
+      const iAngle = markerAngleRad + deg2rad(p.offsetDeg - state.phaseAngleDeg);
+      els.v.textContent = `${voltages[idx].toFixed(1)} V ∠${normalizeDeg(rad2deg(vAngle)).toFixed(1)}°`;
+      els.pol.textContent = voltages[idx] >= 0 ? '+' : '-';
+      els.i.textContent = `${currents[idx].toFixed(1)} A ∠${normalizeDeg(rad2deg(iAngle)).toFixed(1)}°`;
+      els.dir.textContent = currents[idx] >= 0 ? 'OUT' : 'IN';
+    });
+
+    summary.RY.textContent = `${(voltages[0] - voltages[1]).toFixed(1)} V`;
+    summary.YB.textContent = `${(voltages[1] - voltages[2]).toFixed(1)} V`;
+    summary.BR.textContent = `${(voltages[2] - voltages[0]).toFixed(1)} V`;
+  }
+
   function drawStarWinding(thetaOffsetRad) {
     const rect = starCanvas.getBoundingClientRect();
     const width = rect.width;
@@ -548,6 +588,7 @@
     const markerAngle = thetaOffset + markerPhaseRad;
     drawPhasorDiagram(markerAngle);
     drawStarWinding(markerAngle);
+    updateSummaryPanel(markerAngle);
 
     requestAnimationFrame(render);
   }
