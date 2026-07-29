@@ -71,6 +71,13 @@
   // lower frequencies show fewer (at the default 50 Hz this is exactly 2
   // cycles, matching the previous fixed-cycle view).
   const WINDOW_MS = 40;
+  const PADDING = { top: 20, right: 20, bottom: 26, left: 20 };
+
+  const wavePanel = canvas.closest('.wave-panel');
+  const waveTooltip = document.getElementById('waveTooltip');
+  let hoverMs = null;
+  let hoverClientX = 0;
+  let hoverClientY = 0;
 
   const state = {
     frequency: Number(els.frequency.value),
@@ -124,6 +131,20 @@
   });
   els.showVoltage.addEventListener('change', () => {
     state.showVoltage = els.showVoltage.checked;
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const plotW = rect.width - PADDING.left - PADDING.right;
+    const relX = e.clientX - rect.left - PADDING.left;
+    hoverMs = Math.min(WINDOW_MS, Math.max(0, (relX / plotW) * WINDOW_MS));
+    hoverClientX = e.clientX;
+    hoverClientY = e.clientY;
+    waveTooltip.style.display = 'block';
+  });
+  canvas.addEventListener('mouseleave', () => {
+    hoverMs = null;
+    waveTooltip.style.display = 'none';
   });
 
   function resizeCanvas(el, context) {
@@ -257,6 +278,79 @@
         ctx.stroke();
       }
     });
+  }
+
+  function drawHoverCrosshair(width, height, padding, maxV, maxI, thetaOffsetRad) {
+    if (hoverMs === null) return;
+
+    const plotW = width - padding.left - padding.right;
+    const plotH = height - padding.top - padding.bottom;
+    const midY = padding.top + plotH / 2;
+    const hoverRad = 2 * Math.PI * state.frequency * (hoverMs / 1000);
+    const hx = padding.left + (hoverMs / WINDOW_MS) * plotW;
+
+    ctx.strokeStyle = '#5c6270';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(hx, padding.top);
+    ctx.lineTo(hx, padding.top + plotH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    PHASES.forEach((p) => {
+      if (state.showVoltage) {
+        const v = instantaneousVoltage(p, thetaOffsetRad + hoverRad);
+        const py = midY - (v / maxV) * (plotH / 2 - 10);
+        ctx.beginPath();
+        ctx.arc(hx, py, 3, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+      }
+      if (state.showCurrent) {
+        const i = instantaneousCurrent(p, thetaOffsetRad + hoverRad);
+        const py = midY - (i / maxI) * (plotH / 2 - 10);
+        ctx.beginPath();
+        ctx.arc(hx, py, 3, 0, Math.PI * 2);
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    });
+  }
+
+  function updateHoverTooltip(thetaOffsetRad) {
+    if (hoverMs === null) return;
+
+    const hoverRad = 2 * Math.PI * state.frequency * (hoverMs / 1000);
+    const totalAngle = thetaOffsetRad + hoverRad;
+    const rows = PHASES.map((p) => {
+      const vAngle = totalAngle + deg2rad(p.offsetDeg);
+      const iAngle = totalAngle + deg2rad(p.offsetDeg - state.phaseAngleDeg);
+      const v = instantaneousVoltage(p, totalAngle);
+      const i = instantaneousCurrent(p, totalAngle);
+      return `<div class="wave-tooltip-row">
+        <i class="dot" style="background:${p.color}"></i>${p.name}:
+        <span>${v.toFixed(1)} V ∠${normalizeDeg(rad2deg(vAngle)).toFixed(0)}°</span>
+        <span>${i.toFixed(1)} A ∠${normalizeDeg(rad2deg(iAngle)).toFixed(0)}°</span>
+      </div>`;
+    }).join('');
+
+    waveTooltip.innerHTML = `<div class="wave-tooltip-header">t = ${hoverMs.toFixed(1)} ms &mdash; ${normalizeDeg(rad2deg(totalAngle)).toFixed(1)}&deg;</div>${rows}`;
+
+    const panelRect = wavePanel.getBoundingClientRect();
+    let left = hoverClientX - panelRect.left + 16;
+    let top = hoverClientY - panelRect.top + 16;
+    const tooltipW = waveTooltip.offsetWidth;
+    const tooltipH = waveTooltip.offsetHeight;
+    if (left + tooltipW > panelRect.width) {
+      left = hoverClientX - panelRect.left - tooltipW - 16;
+    }
+    if (top + tooltipH > panelRect.height) {
+      top = hoverClientY - panelRect.top - tooltipH - 16;
+    }
+    waveTooltip.style.left = `${left}px`;
+    waveTooltip.style.top = `${top}px`;
   }
 
   function drawArrow(context, x0, y0, x1, y1, color, dashed) {
@@ -549,7 +643,7 @@
     const rect = canvas.getBoundingClientRect();
     const width = rect.width;
     const height = rect.height;
-    const padding = { top: 20, right: 20, bottom: 26, left: 20 };
+    const padding = PADDING;
 
     ctx.clearRect(0, 0, width, height);
     drawGrid(width, height, padding);
@@ -583,6 +677,8 @@
     }
 
     drawMarker(width, height, padding, maxV, maxI, thetaOffset);
+    drawHoverCrosshair(width, height, padding, maxV, maxI, thetaOffset);
+    updateHoverTooltip(thetaOffset);
 
     const markerPhaseRad = 2 * Math.PI * state.frequency * (state.markerMs / 1000);
     const markerAngle = thetaOffset + markerPhaseRad;

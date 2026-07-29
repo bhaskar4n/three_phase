@@ -17,8 +17,11 @@
       <div class="plots">
         <div class="plot-panel wave-panel">
           <h2>Time-Domain Waveform</h2>
-          <p class="wave-note">Fixed 40&nbsp;ms time window (oscilloscope-style) &mdash; raising the frequency packs more visible cycles into it, lowering it shows fewer.</p>
-          <canvas id="waveformCanvas"></canvas>
+          <p class="wave-note">Fixed 40&nbsp;ms time window (oscilloscope-style) &mdash; raising the frequency packs more visible cycles into it, lowering it shows fewer. Hover over the chart to read every phase's value at that instant.</p>
+          <div class="wave-canvas-wrap">
+            <canvas id="waveformCanvas"></canvas>
+            <div id="waveTooltip" class="wave-tooltip"></div>
+          </div>
 
           <div class="control marker-control">
             <label for="marker">Marker Position (ms): <span id="markerVal">0.0</span> ms</label>

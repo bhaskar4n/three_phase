@@ -82,6 +82,10 @@ canvas {
   padding: 14px;
 }
 
+.wave-panel {
+  position: relative;
+}
+
 .plot-panel h2 {
   margin: 0 0 10px;
   font-size: 1rem;
@@ -93,6 +97,40 @@ canvas {
   font-size: 0.78rem;
   color: var(--muted);
   line-height: 1.4;
+}
+
+.wave-tooltip {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: rgba(10, 12, 18, 0.95);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.wave-tooltip-header {
+  color: var(--muted);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.wave-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wave-tooltip-row .dot {
+  width: 7px;
+  height: 7px;
 }
 
 #waveformCanvas {
