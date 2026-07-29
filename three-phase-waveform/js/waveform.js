@@ -166,6 +166,17 @@
   const rad2deg = (r) => (r * 180) / Math.PI;
   const normalizeDeg = (deg) => ((deg % 360) + 360) % 360;
 
+  // Formats an angle as its standard 0-360deg notation, plus its
+  // equivalent signed -180..180deg notation in parentheses when the two
+  // differ (electrical engineering commonly uses either convention).
+  function angleLabel(deg, decimals = 1) {
+    const pos = normalizeDeg(deg);
+    const signed = pos > 180 ? pos - 360 : pos;
+    const posStr = `${pos.toFixed(decimals)}°`;
+    if (Math.abs(signed - pos) < 1e-9) return posStr;
+    return `${posStr} (${signed.toFixed(decimals)}°)`;
+  }
+
   function drawGrid(width, height, padding) {
     const plotW = width - padding.left - padding.right;
     const plotH = height - padding.top - padding.bottom;
@@ -244,15 +255,14 @@
     ctx.stroke();
     ctx.setLineDash([]);
 
-    const normalizedAngle = normalizeDeg(rad2deg(thetaOffsetRad + markerRad));
-    readout.angle.textContent = normalizedAngle.toFixed(1);
+    readout.angle.textContent = angleLabel(rad2deg(thetaOffsetRad + markerRad));
 
     PHASES.forEach((p, idx) => {
       const els = phaseReadoutEls[idx];
 
       const vAngle = thetaOffsetRad + markerRad + deg2rad(p.offsetDeg);
       const v = state.voltageAmp * Math.sin(vAngle);
-      els.v.textContent = `${v.toFixed(1)} V ∠${normalizeDeg(rad2deg(vAngle)).toFixed(1)}°`;
+      els.v.textContent = `${v.toFixed(1)} V ∠${angleLabel(rad2deg(vAngle))}`;
       if (state.showVoltage) {
         const py = midY - (v / maxV) * (plotH / 2 - 10);
         ctx.beginPath();
@@ -266,7 +276,7 @@
 
       const iAngle = thetaOffsetRad + markerRad + deg2rad(p.offsetDeg - state.phaseAngleDeg);
       const i = state.currentAmp * Math.sin(iAngle);
-      els.i.textContent = `${i.toFixed(1)} A ∠${normalizeDeg(rad2deg(iAngle)).toFixed(1)}°`;
+      els.i.textContent = `${i.toFixed(1)} A ∠${angleLabel(rad2deg(iAngle))}`;
       if (state.showCurrent) {
         const py = midY - (i / maxI) * (plotH / 2 - 10);
         ctx.beginPath();
@@ -331,12 +341,12 @@
       const i = instantaneousCurrent(p, totalAngle);
       return `<div class="wave-tooltip-row">
         <i class="dot" style="background:${p.color}"></i>${p.name}:
-        <span>${v.toFixed(1)} V ∠${normalizeDeg(rad2deg(vAngle)).toFixed(0)}°</span>
-        <span>${i.toFixed(1)} A ∠${normalizeDeg(rad2deg(iAngle)).toFixed(0)}°</span>
+        <span>${v.toFixed(1)} V ∠${angleLabel(rad2deg(vAngle), 0)}</span>
+        <span>${i.toFixed(1)} A ∠${angleLabel(rad2deg(iAngle), 0)}</span>
       </div>`;
     }).join('');
 
-    waveTooltip.innerHTML = `<div class="wave-tooltip-header">t = ${hoverMs.toFixed(1)} ms &mdash; ${normalizeDeg(rad2deg(totalAngle)).toFixed(1)}&deg;</div>${rows}`;
+    waveTooltip.innerHTML = `<div class="wave-tooltip-header">t = ${hoverMs.toFixed(1)} ms &mdash; ${angleLabel(rad2deg(totalAngle))}</div>${rows}`;
 
     const panelRect = wavePanel.getBoundingClientRect();
     let left = hoverClientX - panelRect.left + 16;
@@ -419,11 +429,7 @@
         phasorCtx.fillText(p.name, x + 6 * Math.cos(angle), y - 6 * Math.sin(angle));
         phasorCtx.font = '10px sans-serif';
         phasorCtx.fillStyle = '#9aa0ac';
-        phasorCtx.fillText(
-          `${normalizeDeg(rad2deg(angle)).toFixed(0)}°`,
-          x + 6 * Math.cos(angle),
-          y - 6 * Math.sin(angle) + 12
-        );
+        phasorCtx.fillText(angleLabel(rad2deg(angle), 0), x + 6 * Math.cos(angle), y - 6 * Math.sin(angle) + 12);
       });
     }
 
@@ -435,11 +441,7 @@
         drawArrow(phasorCtx, cx, cy, x, y, p.color, true);
         phasorCtx.font = '10px sans-serif';
         phasorCtx.fillStyle = p.color;
-        phasorCtx.fillText(
-          `${normalizeDeg(rad2deg(angle)).toFixed(0)}°`,
-          x + 6 * Math.cos(angle),
-          y - 6 * Math.sin(angle)
-        );
+        phasorCtx.fillText(angleLabel(rad2deg(angle), 0), x + 6 * Math.cos(angle), y - 6 * Math.sin(angle));
       });
     }
   }
@@ -460,7 +462,7 @@
   // views always agree.
   function updateSummaryPanel(markerAngleRad) {
     summary.ms.textContent = state.markerMs.toFixed(1);
-    summary.angle.textContent = normalizeDeg(rad2deg(markerAngleRad)).toFixed(1);
+    summary.angle.textContent = angleLabel(rad2deg(markerAngleRad));
 
     const voltages = PHASES.map((p) => instantaneousVoltage(p, markerAngleRad));
     const currents = PHASES.map((p) => instantaneousCurrent(p, markerAngleRad));
@@ -469,9 +471,9 @@
       const els = summaryPhaseEls[idx];
       const vAngle = markerAngleRad + deg2rad(p.offsetDeg);
       const iAngle = markerAngleRad + deg2rad(p.offsetDeg - state.phaseAngleDeg);
-      els.v.textContent = `${voltages[idx].toFixed(1)} V ∠${normalizeDeg(rad2deg(vAngle)).toFixed(1)}°`;
+      els.v.textContent = `${voltages[idx].toFixed(1)} V ∠${angleLabel(rad2deg(vAngle))}`;
       els.pol.textContent = voltages[idx] >= 0 ? '+' : '-';
-      els.i.textContent = `${currents[idx].toFixed(1)} A ∠${normalizeDeg(rad2deg(iAngle)).toFixed(1)}°`;
+      els.i.textContent = `${currents[idx].toFixed(1)} A ∠${angleLabel(rad2deg(iAngle))}`;
       els.dir.textContent = currents[idx] >= 0 ? 'OUT' : 'IN';
     });
 
